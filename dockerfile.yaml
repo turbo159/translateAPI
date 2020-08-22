@@ -1,0 +1,25 @@
+# Base image
+FROM golang:1.14.0-alpine3.11
+ 
+# Copy github repo files
+WORKDIR /go/src/github.com/turbo159/translateAPI/
+COPY . .
+ 
+RUN \
+# Compile GO programs
+cd /go/src/github.com/turbo159/translateAPI/cmd/translateAPI && go install && \
+cd /go/src/github.com/turbo159/translateAPI/cmd/csvToJson && go install && \
+# Prepare and populate data folder
+mkdir -p /usr/local/translateAPI/data && \
+cd /usr/local/translateAPI/data && \
+mv /go/src/github.com/turbo159/translateAPI/data/*.csv . && \
+# Generate JSON data files
+csvToJson -path="." && \
+# Cleanup
+rm -rf /go/src/github.com
+ 
+WORKDIR /usr/local/translateAPI/data
+# Port API listens 
+EXPOSE 9005
+# Start API
+CMD ["translateAPI/"]
